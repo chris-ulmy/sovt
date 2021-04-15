@@ -13,7 +13,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     install_requires=["pandas",
                       "numpy",
-                      "hrmtools @ git+https://github.com/chris-ulmy/hrmtools@main"
+                      "hrmtools @ git+git://github.com/chris-ulmy/hrmtools@main"
                      ],
     url="https://github.com/chris-ulmy/sovt.git",
     packages=setuptools.find_namespace_packages(),
