@@ -17,8 +17,9 @@ class SOVT:
         Code written by Christopher Ulmschneider
     """
 
-    def __init__(self, path_out_root, clean=False, make_plots=False):
-        self.path_out_root = Path(path_out_root)
+    def __init__(self, text_path, save_path, clean=False, make_plots=False):
+        self.text_path = text_path
+        self.path_out_root = Path(save_path)
         self.clean = clean
         self.make_plots = make_plots
         self.data = Data(self)
