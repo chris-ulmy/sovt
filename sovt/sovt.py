@@ -1,10 +1,8 @@
-import sys  # nopep8
-sys.path.append(".")  # nopep8
-from cutools.HRM.hrm import HRM
+from hrmtools.hrm import HRM
 from pathlib import Path
-from calcs import Calcs
-from plots import Plots
-from data import Data
+from .calcs import Calcs
+from .plots import Plots
+from .data import Data
 import pickle
 
 

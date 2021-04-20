@@ -1,6 +1,4 @@
-import sys  # nopep8
-sys.path.append(".")  # nopep8
-from sovt import SOVT
+from .sovt import SOVT
 
 
 if __name__ == "__main__":
