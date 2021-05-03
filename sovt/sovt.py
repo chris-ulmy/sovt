@@ -18,7 +18,7 @@ class SOVT:
     """
 
     def __init__(self, text_path, save_path, clean=False, make_plots=False):
-        self.text_path = text_path
+        self.text_path = Path(text_path)
         self.path_out_root = Path(save_path)
         self.clean = clean
         self.make_plots = make_plots
@@ -27,7 +27,6 @@ class SOVT:
         self.calcs = Calcs(self)
 
         self.plots = Plots(self)
-        self.path_txt = Path.cwd() / Path("sovt/text_files")  # change this for final
         self.subjects = {}
 
 
@@ -113,8 +112,8 @@ class SOVT:
             Returns:
             --------
         """
-        # Loop through the text files in path_txt and import the data
-        for file in self.path_txt.iterdir():
+        # Loop through the text files in text_path and import the data
+        for file in self.text_path.iterdir():
             if file.name == "dl_instructions":
                 continue
             f_name_parts = file.name.split(" ", 1)
