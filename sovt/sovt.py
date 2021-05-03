@@ -69,9 +69,12 @@ class SOVT:
         
         # Generate line and spatio plots
         if self.make_plots:
-            print("Generating plots...")
-            # self.plots.lines()
+            print("Generating line plots...")
+            self.plots.lines()
+            print("Generating spatio-temporal plots...")
             self.plots.spatio()
+        
+        print("Completed all operations.")
 
     def load_subjects(self):
         """
