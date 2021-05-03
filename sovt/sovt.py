@@ -115,6 +115,8 @@ class SOVT:
         """
         # Loop through the text files in path_txt and import the data
         for file in self.path_txt.iterdir():
+            if file.name == "dl_instructions":
+                continue
             f_name_parts = file.name.split(" ", 1)
             sub_num = int(f_name_parts[0])
 
