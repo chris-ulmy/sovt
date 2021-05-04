@@ -295,10 +295,13 @@ class Calcs():
                     sub_df.loc[idx, "Sensor"] = "NA"
                 else:
                     # The region isn't the Pharynx so set the sensor to the the
-                    # first sensor listed in the sensors list
+                    # first sensor listed in the sensors list which should only
+                    # be one sensor anyways.
                     sub_df.loc[idx, "Sensor"] = sensors[0]
 
-                # Perform the composite calculations
+                # Perform the composite calculations. If there was only one
+                # sensor then z_mean will be scalar. Performing z_mean.mean() on
+                # this scalar value yields a scalar value.
                 sub_df.loc[idx, "Mean"] = z_mean.mean()
                 sub_df.loc[idx, "Median"] = z_median.median()
                 sub_df.loc[idx, "Max"] = z_max.max()
@@ -309,17 +312,15 @@ class Calcs():
                 # The region is Velum and there is more than one sensor.
                 # Find the superior/caudal most sensor
                 sensor = sensors[0]
-                sub_df2 = self._ss_calc(sensor, idx, sub_df, ignore)
+                self._ss_calc(sensor, idx, sub_df, ignore)
             elif region == "UES" and len(sensors) > 1:                
                 # The region is UES and there is more than one sensor. 
                 # Find the center sensor
                 center_sensor = self._find_center(idx)
-                sub_df2 = self._ss_calc(center_sensor, idx, sub_df, ignore)
-            else: 
-                print("What even goes here?")
+                self._ss_calc(center_sensor, idx, sub_df, ignore)
 
             # Update the self.df_comp dataframe with the modified sub_df
-            assert id(sub_df) == id(sub_df2)
+            # assert id(sub_df) == id(sub_df2)
             self.df_comp.update(sub_df)
 
         # Add Sensor column to the self.df_ss dataframe index.
@@ -353,4 +354,3 @@ class Calcs():
         sub_df.at[idx, "Region_Std"] = self.df_ss.loc[where,
                                                     "Sensor_Std"].values[0]
         sub_df.at[idx, "Ignore"] = ignore
-        return sub_df
