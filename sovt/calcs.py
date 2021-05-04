@@ -25,6 +25,22 @@ class Calcs():
             for composite metrics where the calculations are performed on each
             region as a whole. 
 
+            Note: In the composite sensor calculations only a single sensor or
+            average of sensors is given. The rules for each situation are
+            outlined here. 
+
+            Velum: If multiple sensors in the region, the superior most sensor
+            was chosen.
+
+            Pharynx: All sensors are averaged in this region.
+
+            UES: If multiple sensors in the region, the middle sensor is chosen.
+            If there are an even number of sensors in the region the sensor with
+            the highest mean pressure of the two middle sensors is chosen.
+
+            Eso: Only a single sensor is chosen for this region at all times.
+
+
             Arguments:
             ----------
             None
@@ -255,7 +271,7 @@ class Calcs():
             # Get the pressure data from the hrm data object
             z, _ = hrm.get_segment((start, stop), sensors=sensors)
 
-            # Calculate the metrics using z (pandas dataframe)
+            # Calculate the metrics for each sensor using z (pandas dataframe)
             z_mean = z.mean(axis=0)
             z_median = z.median(axis=0)
             z_max = z.max(axis=0)
@@ -279,35 +295,32 @@ class Calcs():
                     sub_df.loc[idx, "Sensor"] = "NA"
                 else:
                     # The region isn't the Pharynx so set the sensor to the the
-                    # first sensor listed in the sensors list
+                    # first sensor listed in the sensors list which should only
+                    # be one sensor anyways.
                     sub_df.loc[idx, "Sensor"] = sensors[0]
 
-                # Perform the composite calculations
+                # Perform the composite calculations. If there was only one
+                # sensor then z_mean will be scalar. Performing z_mean.mean() on
+                # this scalar value yields a scalar value.
                 sub_df.loc[idx, "Mean"] = z_mean.mean()
                 sub_df.loc[idx, "Median"] = z_median.median()
                 sub_df.loc[idx, "Max"] = z_max.max()
                 sub_df.loc[idx, "Min"] = z_min.min()
                 sub_df.loc[idx, "Region_Std"] = z.stack().std()
                 sub_df.loc[idx, "Ignore"] = ignore
-            else:
-                # There are more than one sensor not and is not the Pharynx
-                # region
+            elif region == "Velum" and len(sensors) > 1:
+                # The region is Velum and there is more than one sensor.
+                # Find the superior/caudal most sensor
+                sensor = sensors[0]
+                self._ss_calc(sensor, idx, sub_df, ignore)
+            elif region == "UES" and len(sensors) > 1:                
+                # The region is UES and there is more than one sensor. 
                 # Find the center sensor
                 center_sensor = self._find_center(idx)
-                # Create the index 'where' based on the task/trial and the
-                # center sensor
-                where = (self.df_ss.index == idx) & (
-                    self.df_ss["Sensor"] == center_sensor)
-                sub_df.at[idx, "Sensor"] = center_sensor
-                sub_df.at[idx, "Mean"] = self.df_ss.loc[where, "Mean"].values[0]
-                sub_df.at[idx, "Median"] = self.df_ss.loc[where, "Median"].values[0]
-                sub_df.at[idx, "Max"] = self.df_ss.loc[where, "Max"].values[0]
-                sub_df.at[idx, "Min"] = self.df_ss.loc[where, "Min"].values[0]
-                sub_df.at[idx, "Region_Std"] = self.df_ss.loc[where,
-                                                         "Sensor_Std"].values[0]
-                sub_df.at[idx, "Ignore"] = ignore
+                self._ss_calc(center_sensor, idx, sub_df, ignore)
 
             # Update the self.df_comp dataframe with the modified sub_df
+            # assert id(sub_df) == id(sub_df2)
             self.df_comp.update(sub_df)
 
         # Add Sensor column to the self.df_ss dataframe index.
@@ -323,3 +336,21 @@ class Calcs():
         # Save the dataframes as pickle files
         self.df_comp.to_pickle(save_path / "comp.pkl")
         self.df_ss.to_pickle(save_path / "ss.pkl")
+
+    def _ss_calc(self, sensor, idx, sub_df, ignore):
+        """
+
+        """
+
+        # Create the index 'where' based on the task/trial and the
+        # center sensor
+        where = (self.df_ss.index == idx) & (
+            self.df_ss["Sensor"] == sensor)
+        sub_df.at[idx, "Sensor"] = sensor
+        sub_df.at[idx, "Mean"] = self.df_ss.loc[where, "Mean"].values[0]
+        sub_df.at[idx, "Median"] = self.df_ss.loc[where, "Median"].values[0]
+        sub_df.at[idx, "Max"] = self.df_ss.loc[where, "Max"].values[0]
+        sub_df.at[idx, "Min"] = self.df_ss.loc[where, "Min"].values[0]
+        sub_df.at[idx, "Region_Std"] = self.df_ss.loc[where,
+                                                    "Sensor_Std"].values[0]
+        sub_df.at[idx, "Ignore"] = ignore
