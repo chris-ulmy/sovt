@@ -104,8 +104,8 @@ class Calcs():
         agg_file = save_path / "Aggregate Data.xlsx"
         stats_file = save_path / "Stats Data.xlsx"
 
-        with open(agg_file, mode="wb") as agg:
-            with open(stats_file, mode="wb") as stats:
+        with pd.ExcelWriter(agg_file) as agg:
+            with pd.ExcelWriter(stats_file) as stats:
                 for df, sheet_name in zip(dfs, sheet_names):
                     df.to_excel(agg, sheet_name=sheet_name, index=True)
                     df_no_idx = df.reset_index()
