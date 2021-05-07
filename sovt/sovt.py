@@ -62,10 +62,11 @@ class SOVT:
         # Save all data to Excel spreadsheets. Makes two copies, human readable
         # and another for statistical analysis.
         print("Exporting data to Excel...")
-        self.calcs.to_excel((self.segs, self.calcs.df_ss, self.calcs.df_comp),
+        self.calcs.to_excel((self.segs, self.calcs.df_ss, self.calcs.df_comp, self.calcs.df_trials),
                             ("Segments",
                              "Single Sensor Data",
-                             "Composite Sensor Data"))
+                             "Composite Sensor Data",
+                             "Means Across Trials"))
         
         # Generate line and spatio plots
         if self.make_plots:
