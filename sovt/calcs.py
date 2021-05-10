@@ -449,7 +449,7 @@ class Calcs():
         self.df_trials_wide = self.df_trials_wide.pivot_table(
             index=["Subject", "State", "Task"],
             columns=["Region"],
-            values=["Mean", "Median", "Max", "Min", "Ignore"])
+            values=["Mean", "Median", "Max", "Min"])
 
         # Create new column names to flatten the multindex
         cols = ["_".join(col) for col in self.df_trials_wide.columns.values]
