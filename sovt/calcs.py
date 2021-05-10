@@ -15,6 +15,7 @@ class Calcs():
         self.df_ss = None
         self.df_comp = None
         self.df_trials = None
+        self.df_trials_wide = None
 
     def perform(self):
         """
@@ -68,6 +69,8 @@ class Calcs():
                 self.sovt.path_out_root / "data/ss.pkl")
             self.df_trials = pd.read_pickle(
                 self.sovt.path_out_root / "data/trials.pkl")
+            self.df_trials_wide = pd.read_pickle(
+                self.sovt.path_out_root / "data/trials_wide.pkl")
 
     def to_excel(self, dfs, sheet_names):
         """
@@ -275,11 +278,11 @@ class Calcs():
             sensors = segs.loc[seg_idx, region]
             ignore = segs.loc[seg_idx, "Ignore"]
 
-            # Get the pressure data. Don't use the full segment by providing
-            # spatio=False argument
-            z = self.sovt.get_segments(
-                subject, (start, stop), sensors, full=False)
-            # z, _ = hrm.get_segment((start, stop), sensors=sensors)
+            # Retreive the modified start, stop interval
+            time_seg = self.sovt.get_interval((start, stop), full=False)
+
+            # Get the pressure data.
+            z, _ = hrm.get_segment(time_seg, sensors=sensors)
 
             # Calculate the metrics for each sensor using z (pandas dataframe)
             z_mean = z.mean(axis=0)
@@ -351,6 +354,7 @@ class Calcs():
         self.df_comp.to_pickle(save_path / "comp.pkl")
         self.df_ss.to_pickle(save_path / "ss.pkl")
         self.df_trials.to_pickle(save_path / "trials.pkl")
+        self.df_trials_wide.to_pickle(save_path / "trials_wide.pkl")
 
     def _ss_calc(self, sensor, idx, sub_df, ignore):
         """
@@ -393,7 +397,8 @@ class Calcs():
             Private function that performs the mean over trials on the df_comp
             dataframe. This will group the df_comp on Subject, State, Task,
             Region. Yields a new dataframe df_trials stored in the class
-            property df_trials.
+            property df_trials. Also pivots the df_trials data to make a wide
+            version of the dataframe stored in the df_trials_wide property.
 
             Arguments:
             ----------
@@ -404,19 +409,48 @@ class Calcs():
             None
         """
 
+        # Create the new list of column names
         group = ["Subject", "State", "Task", "Region"]
         cols = group + list(self.df_comp.columns)
+
+        # Create the new dataframe
         self.df_trials = pd.DataFrame(columns=cols)
+
+        # Set the index of the new dataframe
         self.df_trials = self.df_trials.set_index(group)
 
         # Group the self.df_comp on Subject, State, Task, Region
         for idx, sub_df in self.df_comp.groupby(level=group):
             # idx (Subject, State, Task, Trial, Region)
+
+            # Filter out the tasks that should be ignored
             filtered = sub_df.loc[sub_df["Ignore"] == 0]
+
+            # Calculate the mean of each column
             means = filtered.mean()
+
+            # Name the returned series for the later append operation
             means.name = idx
 
+            # Append the new means series to the new dataframe. Do not ignore
+            # the index as this corresponds to the series.name
             self.df_trials = self.df_trials.append(means, ignore_index=False)
 
+        # Remove the Sensor and Region_Std columns
         self.df_trials = self.df_trials.drop(
             labels=["Sensor", "Region_Std"], axis="columns")
+
+        # Copy over the df_trials dataframe and reset the index
+        self.df_trials_wide = self.df_trials.reset_index()
+
+        # Pivot the dataframe using Region as the new column with the values
+        # repeated for each column. The dataframe now has a multindex for the
+        # columns.
+        self.df_trials_wide = self.df_trials_wide.pivot_table(
+            index=["Subject", "State", "Task"],
+            columns=["Region"],
+            values=["Mean", "Median", "Max", "Min", "Ignore"])
+
+        # Create new column names to flatten the multindex
+        cols = ["_".join(col) for col in self.df_trials_wide.columns.values]
+        self.df_trials_wide.columns = cols

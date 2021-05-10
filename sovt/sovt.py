@@ -30,7 +30,6 @@ class SOVT:
         self.interval_gap = 1
         self.interval_len = 2
 
-
     def run(self):
         """
             The main function for running all calculations and generating graphs.
@@ -63,19 +62,24 @@ class SOVT:
         # Save all data to Excel spreadsheets. Makes two copies, human readable
         # and another for statistical analysis.
         print("Exporting data to Excel...")
-        self.calcs.to_excel((self.segs, self.calcs.df_ss, self.calcs.df_comp, self.calcs.df_trials),
+        self.calcs.to_excel((self.segs,
+                             self.calcs.df_ss,
+                             self.calcs.df_comp,
+                             self.calcs.df_trials,
+                             self.calcs.df_trials_wide),
                             ("Segments",
                              "Single Sensor Data",
                              "Composite Sensor Data",
-                             "Means Across Trials"))
-        
+                             "Means Across Trials",
+                             "Mean Across Trials Wide"))
+
         # Generate line and spatio plots
         if self.make_plots:
             print("Generating line plots...")
             self.plots.lines()
             print("Generating spatio-temporal plots...")
             self.plots.spatio()
-        
+
         print("Completed all operations.")
 
     def load_subjects(self):
@@ -158,7 +162,7 @@ class SOVT:
         """
 
         if full:
-            # The full segment is required. 
+            # The full segment is required.
             interval = time_seg
         else:
             # The shortened segment is required. Add the interval_gap to the
@@ -170,7 +174,7 @@ class SOVT:
             # the original stop time
             if stop > time_seg[1]:
                 stop = time_seg[1]
-        
+
             # Create the interval
             interval = (start, stop)
 
