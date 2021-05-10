@@ -66,7 +66,8 @@ class Calcs():
                 self.sovt.path_out_root / "data/comp.pkl")
             self.df_ss = pd.read_pickle(
                 self.sovt.path_out_root / "data/ss.pkl")
-            self.df_trials = pd.read_pickle(self.sovt.path_out_root / "data/trials.pkl")
+            self.df_trials = pd.read_pickle(
+                self.sovt.path_out_root / "data/trials.pkl")
 
     def to_excel(self, dfs, sheet_names):
         """
@@ -274,8 +275,11 @@ class Calcs():
             sensors = segs.loc[seg_idx, region]
             ignore = segs.loc[seg_idx, "Ignore"]
 
-            # Get the pressure data from the hrm data object
-            z, _ = hrm.get_segment((start, stop), sensors=sensors)
+            # Get the pressure data. Don't use the full segment by providing
+            # spatio=False argument
+            z = self.sovt.get_segments(
+                subject, (start, stop), sensors, full=False)
+            # z, _ = hrm.get_segment((start, stop), sensors=sensors)
 
             # Calculate the metrics for each sensor using z (pandas dataframe)
             z_mean = z.mean(axis=0)
@@ -414,4 +418,5 @@ class Calcs():
 
             self.df_trials = self.df_trials.append(means, ignore_index=False)
 
-        self.df_trials = self.df_trials.drop(labels=["Sensor", "Region_Std"], axis="columns")
+        self.df_trials = self.df_trials.drop(
+            labels=["Sensor", "Region_Std"], axis="columns")
